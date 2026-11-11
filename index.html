@@ -1,0 +1,737 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AI 泡沫化：詳細版</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700;900&family=Playfair+Display:ital,wght@1,700;1,900&display=swap" rel="stylesheet">
+<style>
+/* === FIXED STAGE: 1920×1080 canvas scaled uniformly, never reflowed === */
+html,body{margin:0;height:100%;overflow:hidden;background:#1c1a17}
+.viewport{position:fixed;inset:0}
+.stage{width:1920px;height:1080px;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) scale(var(--s,1))}
+
+/* === THEME TOKENS === */
+:root{--paper:#ece4d3;--card:#f4eee2;--ink:#1d1a16;--mute:#6f6455;--accent:#b4341f;--accent-l:#e0674f;--serif:'Noto Serif TC',serif;--num:'Playfair Display',serif}
+
+/* === SLIDE BASE: visibility switching (no display:none) === */
+.slide{position:absolute;inset:0;background:var(--paper);color:var(--ink);font-family:var(--serif);overflow:hidden;
+  visibility:hidden;opacity:0;pointer-events:none;transition:opacity .45s ease,visibility 0s .45s}
+.slide.active{visibility:visible;opacity:1;pointer-events:auto;transition:opacity .45s ease}
+.slide::before{content:'';position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(circle at 20% 10%,rgba(255,255,255,.4),transparent 50%),radial-gradient(circle at 90% 90%,rgba(120,90,40,.18),transparent 60%)}
+.slide.dark{background:var(--ink);color:var(--paper);--card:#2a2621;--mute:#b9ad99;--accent:var(--accent-l)}
+.slide.dark::before{background:radial-gradient(circle at 80% 20%,rgba(180,52,31,.25),transparent 55%)}
+
+/* === NEWSPAPER CHROME: header rule + folio === */
+.head{position:absolute;top:56px;left:110px;right:110px;display:flex;justify-content:space-between;font-size:22px;letter-spacing:.3em;
+  border-top:5px double currentColor;border-bottom:1px solid currentColor;padding:12px 0}
+.folio{position:absolute;bottom:52px;left:110px;right:110px;display:flex;justify-content:space-between;font-size:20px;border-top:1px solid currentColor;padding-top:12px;color:var(--mute)}
+.pad{position:absolute;left:110px;right:110px;top:150px;bottom:120px;display:flex;flex-direction:column}
+
+/* === TYPE SCALE (reading-first) === */
+.kicker{font-size:24px;letter-spacing:.3em;color:var(--accent);font-weight:700;margin:0 0 10px}
+.title{font-weight:900;font-size:72px;line-height:1.2;margin:0 0 14px}
+.lede{font-size:32px;line-height:1.6;color:var(--mute);margin:0 0 36px;max-width:1500px}
+.body{font-size:30px;line-height:1.65;margin:0}
+.small{font-size:24px;line-height:1.6;color:var(--mute)}
+.num{font-family:var(--num);font-style:italic;font-weight:900;color:var(--accent);line-height:1}
+b,.hl{color:var(--accent);font-weight:700}
+
+/* === COMPONENTS === */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:50px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:40px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:32px}
+.card{background:var(--card);border-top:6px solid var(--accent);padding:30px 32px;box-shadow:0 2px 0 rgba(0,0,0,.06)}
+.card h3{font-size:36px;margin:0 0 14px;font-weight:900}
+.card p{font-size:26px;line-height:1.6;margin:0}
+.card .num{font-size:72px;margin-bottom:10px}
+.rule-col>div{border-left:2px solid currentColor;padding-left:40px}
+.rule-col>div:first-child{border-left:0;padding-left:0}
+
+/* timeline */
+.tl{position:relative;display:grid;gap:0;margin-top:20px}
+.tl::before{content:'';position:absolute;left:0;right:0;top:46px;height:3px;background:currentColor}
+.tl>div{position:relative;padding-top:84px;padding-right:24px}
+.tl>div::before{content:'';position:absolute;top:36px;left:0;width:20px;height:20px;border-radius:50%;background:var(--paper);border:4px solid var(--accent)}
+.dark .tl>div::before{background:var(--ink)}
+.tl .yr{position:absolute;top:0;left:0;font-family:var(--num);font-style:italic;font-weight:900;font-size:32px;color:var(--accent)}
+.tl p{font-size:25px;line-height:1.55;margin:0}
+
+/* table */
+table{width:100%;border-collapse:collapse;font-size:27px;line-height:1.5}
+th{text-align:left;font-size:24px;letter-spacing:.15em;color:var(--mute);border-bottom:3px solid currentColor;padding:12px 18px}
+td{border-bottom:1px solid rgba(0,0,0,.18);padding:16px 18px;vertical-align:top}
+td:first-child{font-weight:900;width:220px}
+
+/* quote cards */
+.quote{border-left:6px solid var(--accent);padding:6px 0 6px 34px}
+.quote p{font-size:34px;line-height:1.55;font-weight:700;margin:0 0 16px}
+.quote cite{font-style:normal;font-size:24px;color:var(--mute)}
+
+/* bar chart */
+.bars{display:flex;align-items:flex-end;gap:60px;height:440px;border-bottom:3px solid currentColor;padding:0 20px}
+.bars>div{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%}
+.bars .bar{width:100%;background:var(--accent);transform-origin:bottom}
+.slide.active .bars .bar{animation:grow .9s cubic-bezier(.2,.8,.2,1) both}
+.bars .v{font-family:var(--num);font-style:italic;font-weight:900;font-size:44px;margin-bottom:10px}
+.bars .l{font-size:24px;margin-top:14px;position:absolute;bottom:-50px}
+.bars>div{position:relative}
+
+/* check list */
+.checks{list-style:none;margin:0;padding:0;counter-reset:c}
+.checks li{counter-increment:c;display:grid;grid-template-columns:90px 1fr;gap:20px;padding:20px 0;border-bottom:1px solid rgba(0,0,0,.18);font-size:29px;line-height:1.55}
+.checks li::before{content:counter(c,decimal-leading-zero);font-family:var(--num);font-style:italic;font-weight:900;font-size:46px;color:var(--accent);line-height:1}
+
+/* === ILLUSTRATIONS: inline SVG line art, themed via currentColor + tokens === */
+svg text{font-family:var(--serif)}
+.ln{fill:none;stroke:currentColor;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+.ac{stroke:var(--accent)}
+.fa{fill:var(--accent)}
+.fm{fill:var(--mute)}
+.fi{fill:currentColor}
+.thin{stroke-width:1.5;opacity:.35}
+.dash{stroke-dasharray:8 8}
+.icon{width:64px;height:64px;float:right;margin:-6px -4px 0 12px;color:var(--accent)}
+.draw{stroke-dasharray:3000;stroke-dashoffset:3000}
+.slide.active .draw{animation:draw 2.2s .3s cubic-bezier(.6,0,.2,1) forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+.float{animation:float 6s ease-in-out infinite}
+@keyframes float{50%{transform:translateY(-14px)}}
+
+/* === REVEAL ANIMATION: runs each time a slide becomes active === */
+.reveal{opacity:0;transform:translateY(22px)}
+.slide.active .reveal{animation:up .8s cubic-bezier(.2,.8,.2,1) forwards}
+.slide.active .reveal:nth-child(2){animation-delay:.1s}
+.slide.active .reveal:nth-child(3){animation-delay:.2s}
+.slide.active .reveal:nth-child(4){animation-delay:.3s}
+.slide.active .reveal:nth-child(5){animation-delay:.4s}
+@keyframes up{to{opacity:1;transform:none}}
+@keyframes grow{from{transform:scaleY(0)}}
+
+/* === UI OUTSIDE THE STAGE: progress + edit === */
+.progress{position:fixed;left:0;bottom:0;height:4px;background:var(--accent);transition:width .4s;z-index:5}
+.edit-hot{position:fixed;top:0;left:0;width:60px;height:60px;z-index:6}
+.edit-btn{position:fixed;top:12px;left:12px;z-index:7;font:600 14px/1 var(--serif);padding:8px 12px;border:0;border-radius:6px;background:var(--ink);color:var(--paper);opacity:0;transition:opacity .2s;cursor:pointer}
+.edit-hot:hover+.edit-btn,.edit-btn:hover,body.editing .edit-btn{opacity:1}
+body.editing [data-editable]{outline:2px dashed rgba(180,52,31,.5);outline-offset:6px}
+
+@media (prefers-reduced-motion:reduce){
+  .reveal,.slide.active .reveal,.slide.active .bars .bar{animation:none!important;opacity:1;transform:none}
+  .slide,.slide.active{transition:none}
+  .draw,.slide.active .draw{animation:none!important;stroke-dashoffset:0}
+  .float{animation:none}
+}
+</style>
+</head>
+<body>
+<!-- === SHARED SVG SYMBOLS: icons + bubble motif, reused via <use> === -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="bubble" viewBox="0 0 200 200"><circle cx="100" cy="100" r="92" fill="none" stroke="currentColor" stroke-width="4"/><path d="M48 70 Q60 42 92 34" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round"/><circle cx="58" cy="96" r="5" fill="currentColor"/></symbol>
+    <symbol id="pop" viewBox="0 0 200 200"><g fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"><path d="M100 8 A92 92 0 0 1 178 54"/><path d="M190 100 A92 92 0 0 1 150 176"/><path d="M100 192 A92 92 0 0 1 22 146"/><path d="M10 100 A92 92 0 0 1 50 24"/><path d="M100 60v-26M140 100h26M100 140v26M60 100H34M128 72l18-18M128 128l18 18M72 128l-18 18M72 72 54 54"/></g></symbol>
+    <symbol id="i-hourglass" viewBox="0 0 64 64"><path d="M16 6h32M16 58h32M20 6c0 18 24 18 24 26S20 40 20 58M44 6c0 18-24 18-24 26s24 8 24 26" fill="none" stroke="currentColor" stroke-width="3"/></symbol>
+    <symbol id="i-chart" viewBox="0 0 64 64"><path d="M6 58h52M10 50l14-14 10 8 22-28M44 16h12v12" fill="none" stroke="currentColor" stroke-width="3"/></symbol>
+    <symbol id="i-loop" viewBox="0 0 64 64"><path d="M50 22A20 20 0 0 0 14 26M14 42a20 20 0 0 0 36-4M50 10v12H38M14 54V42h12" fill="none" stroke="currentColor" stroke-width="3"/></symbol>
+    <symbol id="i-eye" viewBox="0 0 64 64"><path d="M4 32s10-18 28-18 28 18 28 18-10 18-28 18S4 32 4 32Z" fill="none" stroke="currentColor" stroke-width="3"/><circle cx="32" cy="32" r="8" fill="currentColor"/></symbol>
+    <symbol id="i-paw" viewBox="0 0 64 64"><g fill="currentColor"><ellipse cx="32" cy="42" rx="13" ry="11"/><circle cx="14" cy="26" r="6"/><circle cx="25" cy="15" r="6"/><circle cx="39" cy="15" r="6"/><circle cx="50" cy="26" r="6"/></g></symbol>
+    <symbol id="i-truck" viewBox="0 0 64 64"><path d="M4 16h34v28H4zM38 26h12l10 10v8H38M14 50a5 5 0 1 0 0-.1M48 50a5 5 0 1 0 0-.1" fill="none" stroke="currentColor" stroke-width="3"/></symbol>
+    <symbol id="i-router" viewBox="0 0 64 64"><path d="M6 34h52v16H6zM16 42h4M26 42h4M18 34l-6-14M46 34l6-14M24 20a12 12 0 0 1 16 0M18 14a20 20 0 0 1 28 0" fill="none" stroke="currentColor" stroke-width="3"/></symbol>
+    <symbol id="i-box" viewBox="0 0 64 64"><path d="M6 18 32 6l26 12v28L32 58 6 46zM6 18l26 12 26-12M32 30v28M20 44q12 6 24 0" fill="none" stroke="currentColor" stroke-width="3"/></symbol>
+    <symbol id="i-bolt" viewBox="0 0 64 64"><path d="M36 4 12 36h18l-4 24 26-34H34z" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/></symbol>
+    <symbol id="i-chip" viewBox="0 0 64 64"><path d="M16 16h32v32H16zM24 24h16v16H24zM22 8v8M32 8v8M42 8v8M22 48v8M32 48v8M42 48v8M8 22h8M8 32h8M8 42h8M48 22h8M48 32h8M48 42h8" fill="none" stroke="currentColor" stroke-width="3"/></symbol>
+    <symbol id="i-tag" viewBox="0 0 64 64"><path d="M6 30V6h24l28 28-24 24zM40 46l8-8" fill="none" stroke="currentColor" stroke-width="3"/><circle cx="18" cy="18" r="4" fill="currentColor"/></symbol>
+    <symbol id="i-pie" viewBox="0 0 64 64"><circle cx="32" cy="32" r="26" fill="none" stroke="currentColor" stroke-width="3"/><path d="M32 32V6a26 26 0 0 1 24.7 34Z" fill="currentColor"/></symbol>
+  </defs>
+</svg>
+<div class="viewport"><div class="stage" id="stage">
+
+<!-- === 1. COVER === -->
+<section class="slide">
+  <div class="head"><span>科 技 與 市 場</span><span>特別報導・詳細版</span><span>AI 產業觀察</span></div>
+  <!-- bubble cluster: growing bubbles, the largest one popping -->
+  <svg style="position:absolute;right:110px;top:170px;width:700px;height:760px;color:var(--ink)" viewBox="0 0 700 760">
+    <use href="#bubble" x="420" y="560" width="110" height="110" class="float" style="animation-delay:-1s;opacity:.5"/>
+    <use href="#bubble" x="520" y="430" width="150" height="150" class="float" style="animation-delay:-2s;opacity:.65"/>
+    <use href="#bubble" x="250" y="470" width="190" height="190" class="float" style="animation-delay:-3s;opacity:.8"/>
+    <use href="#bubble" x="330" y="120" width="300" height="300" class="float"/>
+    <use href="#pop" x="60" y="40" width="250" height="250" style="color:var(--accent)"/>
+    <text x="185" y="172" text-anchor="middle" font-family="Playfair Display" font-style="italic" font-weight="900" font-size="44" class="fa">AI</text>
+    <path class="ln thin" d="M0 740H700"/>
+  </svg>
+  <div class="pad" style="justify-content:center">
+    <div class="num reveal" style="font-size:140px"><span style="color:var(--ink);opacity:.35;text-decoration:line-through;text-decoration-thickness:6px">1999</span> → 2026</div>
+    <h1 class="reveal" data-editable style="font-size:200px;font-weight:900;line-height:1.05;margin:20px 0 0">AI 泡沫化？</h1>
+    <p class="reveal" data-editable style="font-size:52px;font-weight:700;margin:30px 0 0">估值、資本支出與營收落差的完整整理</p>
+  </div>
+  <div class="folio"><span>歷史對照</span><span>估值</span><span>資金流向</span><span>風險與訊號</span></div>
+</section>
+
+<!-- === 2. CONTENTS === -->
+<section class="slide">
+  <div class="head"><span>目錄</span><span>本期內容</span><span>02</span></div>
+  <div class="pad">
+    <p class="kicker reveal">本期內容</p>
+    <h2 class="title reveal">四個版面</h2>
+    <div class="grid4 reveal" style="margin-top:40px">
+      <div class="card"><svg class="icon"><use href="#i-hourglass"/></svg><div class="num">I</div><h3>歷史版</h3><p>泡沫的定義與五個階段，1999 年網路泡沫怎麼漲、怎麼破。</p></div>
+      <div class="card"><svg class="icon"><use href="#i-chart"/></svg><div class="num">II</div><h3>市場版</h3><p>2022 年以來的 AI 熱潮：估值、資本支出、營收缺口、企業導入。</p></div>
+      <div class="card"><svg class="icon"><use href="#i-loop"/></svg><div class="num">III</div><h3>分析版</h3><p>循環交易、舉債融資、各方說法，以及這次和 1999 年的異同。</p></div>
+      <div class="card"><svg class="icon"><use href="#i-eye"/></svg><div class="num">IV</div><h3>觀察版</h3><p>反方論點、主要風險、三種情境，還有該盯哪些指標。</p></div>
+    </div>
+    <!-- section strip: page ranges as a ruler -->
+    <svg class="reveal" viewBox="0 0 1700 200" style="width:100%;margin-top:auto">
+      <path class="ln" d="M0 100H1700"/>
+      <g class="fa"><rect x="0" y="88" width="340" height="24"/><rect x="425" y="88" width="425" height="24" opacity=".75"/><rect x="935" y="88" width="340" height="24" opacity=".5"/><rect x="1360" y="88" width="340" height="24" opacity=".3"/></g>
+      <g class="fm" font-size="26" text-anchor="middle"><text x="170" y="160">第 3–6 頁</text><text x="637" y="160">第 7–11 頁</text><text x="1105" y="160">第 12–15 頁</text><text x="1530" y="160">第 16–21 頁</text></g>
+      <g class="fi" font-size="30" font-weight="700" text-anchor="middle"><text x="170" y="62">歷史</text><text x="637" y="62">市場</text><text x="1105" y="62">分析</text><text x="1530" y="62">觀察</text></g>
+    </svg>
+  </div>
+  <div class="folio"><span>AI 泡沫化？</span><span>2</span></div>
+</section>
+
+<!-- === 3. WHAT IS A BUBBLE === -->
+<section class="slide">
+  <div class="head"><span>歷史版</span><span>定義</span><span>03</span></div>
+  <div class="pad">
+    <p class="kicker reveal">什麼是泡沫</p>
+    <h2 class="title reveal" data-editable>價格跑得比價值快太多</h2>
+    <p class="lede reveal" data-editable>泡沫不代表技術是假的。它指的是資產價格建立在「未來一定會更好」的預期上，而且漲幅遠超過實際能創造的現金流。</p>
+    <div class="grid3 reveal">
+      <div class="card"><h3>新故事</h3><p data-editable>出現一項真的會改變世界的新技術，市場相信「這次不一樣」。</p></div>
+      <div class="card"><h3>便宜的錢</h3><p data-editable>資金容易取得，投資人願意為遙遠的獲利先付高價。</p></div>
+      <div class="card"><h3>估值脫鉤</h3><p data-editable>股價上漲的理由從「賺了多少」變成「別人也在買」。</p></div>
+    </div>
+    <!-- price vs value: the gap between the two lines is the bubble (illustrative) -->
+    <svg class="reveal" viewBox="0 0 1700 300" style="width:100%;margin-top:auto">
+      <path d="M40 250 C400 235 700 200 1000 150 S1350 40 1500 30 L1500 135 C1300 160 1100 175 1000 180 C700 210 400 238 40 250Z" class="fa" opacity=".15"/>
+      <path class="ln draw" d="M40 250 C400 235 700 200 1000 150 S1350 40 1500 30" style="stroke:var(--accent);stroke-width:5"/>
+      <path class="ln" d="M40 250 C400 238 700 210 1000 180 S1300 160 1500 135"/>
+      <path class="ln thin" d="M40 280H1660"/>
+      <g font-size="26"><text x="1520" y="38" class="fa" font-weight="700">價格</text><text x="1520" y="145" class="fi">實際價值</text><text x="1180" y="130" class="fa" font-weight="900" font-size="34">泡沫</text></g>
+      <text x="40" y="300" class="fm" font-size="20">示意圖</text>
+    </svg>
+  </div>
+  <div class="folio"><span>AI 泡沫化？</span><span>3</span></div>
+</section>
+
+<!-- === 4. FIVE STAGES === -->
+<section class="slide">
+  <div class="head"><span>歷史版</span><span>泡沫五階段</span><span>04</span></div>
+  <div class="pad">
+    <p class="kicker reveal">明斯基／金德伯格模型</p>
+    <h2 class="title reveal">泡沫通常走過五個階段</h2>
+    <div class="tl reveal" style="grid-template-columns:repeat(5,1fr);margin-top:30px">
+      <div><span class="yr">01 觸發</span><p data-editable>新技術或新政策出現，帶來真實的獲利機會。</p></div>
+      <div><span class="yr">02 繁榮</span><p data-editable>資金湧入，價格開始上漲，媒體大量報導。</p></div>
+      <div><span class="yr">03 狂熱</span><p data-editable>沒有獲利也能拿到高估值，「怕錯過」主導決策。</p></div>
+      <div><span class="yr">04 獲利了結</span><p data-editable>內行人開始賣出，價格漲不動。</p></div>
+      <div><span class="yr">05 恐慌</span><p data-editable>大家同時想出場，價格急跌。</p></div>
+    </div>
+    <!-- classic bubble curve with the five stages marked (illustrative) -->
+    <svg class="reveal" viewBox="0 0 1700 330" style="width:100%;margin-top:30px">
+      <path class="ln draw" style="stroke-width:5" d="M20 300 C200 295 300 280 380 250 C500 200 600 160 700 120 C780 80 830 20 900 20 C960 20 980 90 1020 110 C1060 130 1070 80 1100 90 C1180 120 1240 260 1360 290 C1460 312 1560 300 1680 285"/>
+      <g class="fa"><circle cx="200" cy="294" r="12"/><circle cx="560" cy="175" r="12"/><circle cx="860" cy="30" r="12"/><circle cx="1040" cy="112" r="12"/><circle cx="1260" cy="260" r="12"/></g>
+      <g class="fi" font-family="Playfair Display" font-style="italic" font-weight="900" font-size="34" text-anchor="middle"><text x="200" y="262">01</text><text x="560" y="140">02</text><text x="790" y="40">03</text><text x="1040" y="160">04</text><text x="1260" y="228">05</text></g>
+      <path class="ln thin" d="M20 318H1680"/>
+    </svg>
+    <p class="small reveal" data-editable style="margin-top:auto">AI 現在走到哪一階段，各方看法分歧，這份簡報不替你下結論，只整理判斷所需的資料。</p>
+  </div>
+  <div class="folio"><span>資料：Kindleberger, Manias, Panics, and Crashes</span><span>4</span></div>
+</section>
+
+<!-- === 5. DOT-COM TIMELINE === -->
+<section class="slide dark">
+  <div class="head"><span>歷史版</span><span>1995–2015</span><span>05</span></div>
+  <div class="pad">
+    <p class="kicker reveal">網路泡沫時間線</p>
+    <h2 class="title reveal">漲了五年，跌了兩年半，回本花了十五年</h2>
+    <div class="tl reveal" style="grid-template-columns:repeat(5,1fr);margin-top:40px">
+      <div><span class="yr">1995</span><p data-editable>網景（Netscape）上市，首日股價大漲，網路股熱潮開始。</p></div>
+      <div><span class="yr">1999</span><p data-editable>那斯達克全年上漲約 86%，大量沒有獲利的網路公司上市。</p></div>
+      <div><span class="yr">2000.3</span><p data-editable>那斯達克收在 5,048 點的高點。</p></div>
+      <div><span class="yr">2002.10</span><p data-editable>跌到約 1,114 點，從高點下跌約 78%。</p></div>
+      <div><span class="yr">2015</span><p data-editable>那斯達克終於重回 2000 年的高點。</p></div>
+    </div>
+    <!-- Nasdaq Composite, approximate year-end levels 1995–2015 (peak/trough marked) -->
+    <svg class="reveal" viewBox="0 0 1700 400" style="width:100%;margin-top:auto">
+      <g class="ln thin"><path d="M60 360H1680"/><path d="M60 360V20"/><path class="dash" d="M60 47H1680"/></g>
+      <g class="fm" font-size="20"><text x="0" y="52">5,000</text><text x="0" y="365">0</text>
+        <text x="60" y="390">1995</text><text x="465" y="390">2000</text><text x="870" y="390">2005</text><text x="1275" y="390">2010</text><text x="1640" y="390">2015</text></g>
+      <path class="ln draw" style="stroke:var(--paper);stroke-width:4" d="M60 294 L141 279 L222 262 L303 223 L384 105 L400 44 L465 205 L546 238 L606 290 L627 276 L708 235 L789 224 L870 222 L951 209 L1032 194 L1113 261 L1194 218 L1275 194 L1356 197 L1437 171 L1518 99 L1599 63 L1680 47"/>
+      <g class="fa"><circle cx="400" cy="44" r="10"/><circle cx="606" cy="290" r="10"/></g>
+      <g font-size="26" font-weight="700" class="fa"><text x="415" y="35">5,048（2000.3）</text><text x="620" y="325">1,114（2002.10）</text></g>
+      <text x="1680" y="20" text-anchor="end" class="fm" font-size="20">約略年底點位，示意用</text>
+    </svg>
+  </div>
+  <div class="folio"><span>資料：Nasdaq Composite 指數歷史資料</span><span>5</span></div>
+</section>
+
+<!-- === 6. DOT-COM COMPANIES === -->
+<section class="slide">
+  <div class="head"><span>歷史版</span><span>泡沫裡的公司</span><span>06</span></div>
+  <div class="pad">
+    <p class="kicker reveal">四種結局</p>
+    <h2 class="title reveal">泡沫破了，技術留下來了</h2>
+    <div class="grid4 reveal" style="margin-top:30px">
+      <div class="card"><svg class="icon"><use href="#i-paw"/></svg><h3>Pets.com</h3><p data-editable>2000 年 2 月上市，同年 11 月宣布清算。成為網路泡沫的代表案例。</p></div>
+      <div class="card"><svg class="icon"><use href="#i-truck"/></svg><h3>Webvan</h3><p data-editable>網路生鮮配送，募資後快速擴張倉儲，2001 年破產。</p></div>
+      <div class="card"><svg class="icon"><use href="#i-router"/></svg><h3>Cisco</h3><p data-editable>2000 年 3 月短暫成為全球市值最高的公司，之後股價跌掉八成以上。公司活下來了，股價很久沒回來。</p></div>
+      <div class="card"><svg class="icon"><use href="#i-box"/></svg><h3>Amazon</h3><p data-editable>股價從高點跌超過九成，後來成為電商與雲端巨頭。</p></div>
+    </div>
+    <p class="lede reveal" data-editable style="margin-top:36px">教訓：基礎建設最後都派上了用場，但當初付高價的投資人不一定等得到。</p>
+  </div>
+  <div class="folio"><span>AI 泡沫化？</span><span>6</span></div>
+</section>
+
+<!-- === 7. AI TIMELINE === -->
+<section class="slide dark">
+  <div class="head"><span>市場版</span><span>2017–2025</span><span>07</span></div>
+  <div class="pad">
+    <p class="kicker reveal">AI 熱潮時間線</p>
+    <h2 class="title reveal">從一篇論文到全球最大的投資主題</h2>
+    <div class="tl reveal" style="grid-template-columns:repeat(6,1fr);margin-top:40px">
+      <div><span class="yr">2017</span><p data-editable>Google 發表 Transformer 論文，成為大型語言模型的基礎。</p></div>
+      <div><span class="yr">2022.11</span><p data-editable>ChatGPT 上線，約兩個月使用者破億。</p></div>
+      <div><span class="yr">2023.1</span><p data-editable>微軟宣布對 OpenAI 追加數十億美元投資。</p></div>
+      <div><span class="yr">2025.1</span><p data-editable>DeepSeek R1 發表，輝達單日市值蒸發約 5,900 億美元。</p></div>
+      <div><span class="yr">2025.1</span><p data-editable>OpenAI、軟銀、甲骨文宣布 5,000 億美元的「星際之門」計畫。</p></div>
+      <div><span class="yr">2025.10</span><p data-editable>輝達市值突破 5 兆美元。</p></div>
+    </div>
+    <!-- neural network line art: layers of nodes, one highlighted path -->
+    <svg class="reveal" viewBox="0 0 1700 340" style="width:100%;margin-top:auto" id="nn"></svg>
+  </div>
+  <div class="folio"><span>資料：各公司公告與市場報導</span><span>7</span></div>
+</section>
+
+<!-- === 8. NVIDIA VALUATION === -->
+<section class="slide">
+  <div class="head"><span>市場版</span><span>估值</span><span>08</span></div>
+  <div class="pad">
+    <p class="kicker reveal">輝達市值里程碑</p>
+    <h2 class="title reveal">兩年半，從 1 兆到 5 兆美元</h2>
+    <div class="grid2 reveal" style="grid-template-columns:1.4fr 1fr;align-items:end;margin-top:20px">
+      <div class="bars" style="margin-bottom:60px">
+        <div><span class="v">1</span><div class="bar" style="height:18%"></div><span class="l">2023.5</span></div>
+        <div><span class="v">3</span><div class="bar" style="height:54%;animation-delay:.15s"></div><span class="l">2024.6</span></div>
+        <div><span class="v">4</span><div class="bar" style="height:72%;animation-delay:.3s"></div><span class="l">2025.7</span></div>
+        <div><span class="v">5</span><div class="bar" style="height:90%;animation-delay:.45s"></div><span class="l">2025.10</span></div>
+      </div>
+      <div>
+        <svg style="width:120px;height:120px;color:var(--accent);margin-bottom:20px"><use href="#i-chip"/></svg>
+        <p class="body" data-editable>單位：兆美元。</p>
+        <p class="body" data-editable style="margin-top:24px">輝達是 AI 晶片的主要供應商，市值變化幾乎等於市場對 AI 投資的信心指標。</p>
+        <p class="body" data-editable style="margin-top:24px">科技巨頭在美股的權重也越來越高，大盤漲跌越來越依賴少數幾家 AI 相關公司。</p>
+      </div>
+    </div>
+  </div>
+  <div class="folio"><span>資料：市場報導（數值為首次突破該門檻的月份）</span><span>8</span></div>
+</section>
+
+<!-- === 9. CAPEX === -->
+<section class="slide">
+  <div class="head"><span>市場版</span><span>錢燒在哪</span><span>09</span></div>
+  <div class="pad">
+    <p class="kicker reveal">資本支出</p>
+    <h2 class="title reveal">史上規模最大的一波基礎建設投資</h2>
+    <div class="grid3 reveal" style="margin-top:30px">
+      <div class="card"><div class="num">≈4,000 億</div><h3>四大雲端巨頭</h3><p data-editable>微軟、Google、亞馬遜、Meta 2025 年資本支出合計估計（美元），大多投入資料中心與 AI 晶片。</p></div>
+      <div class="card"><div class="num">5,000 億</div><h3>星際之門</h3><p data-editable>OpenAI、軟銀與甲骨文宣布的美國 AI 基礎建設計畫，預計分四年投入。</p></div>
+      <div class="card"><div class="num">≈1.4 兆</div><h3>OpenAI 算力承諾</h3><p data-editable>Altman 在 2025 年底表示，OpenAI 未來約八年的算力相關承諾約 1.4 兆美元。</p></div>
+    </div>
+    <!-- proportional bars: same scale for all three figures -->
+    <svg class="reveal" viewBox="0 0 1700 230" style="width:100%;margin-top:40px">
+      <g class="fa"><rect x="200" y="10" width="429" height="50"/><rect x="200" y="85" width="536" height="50" opacity=".75"/><rect x="200" y="160" width="1500" height="50" opacity=".5"/></g>
+      <g class="fi" font-size="26" font-weight="700"><text x="0" y="45">四大雲端</text><text x="0" y="120">星際之門</text><text x="0" y="195">OpenAI 承諾</text></g>
+      <g class="fi" font-size="24"><text x="645" y="45">≈4,000 億／一年</text><text x="752" y="120">5,000 億／四年</text></g>
+      <text x="1680" y="195" text-anchor="end" font-size="24" fill="var(--paper)" font-weight="700">≈1.4 兆／約八年</text>
+    </svg>
+    <p class="small reveal" data-editable style="margin-top:20px">單位皆為美元，長度依同一比例繪製。資本支出為公司財報與指引的媒體彙整估計，實際金額請以最新財報為準。</p>
+  </div>
+  <div class="folio"><span>資料：各公司財報與公告、OpenAI 公開說法</span><span>9</span></div>
+</section>
+
+<!-- === 10. REVENUE GAP === -->
+<section class="slide dark">
+  <div class="head"><span>市場版</span><span>營收落差</span><span>10</span></div>
+  <div class="pad">
+    <p class="kicker reveal">紅杉資本的問題</p>
+    <h2 class="title reveal">AI 要賺多少，才付得起這些投資？</h2>
+    <div class="grid2 reveal rule-col" style="margin-top:30px">
+      <div>
+        <div class="num" style="font-size:110px">2,000 億 → 6,000 億</div>
+        <p class="body" data-editable style="margin-top:24px">紅杉資本合夥人 David Cahn 用輝達的資料中心營收反推：AI 產業每年需要多少營收才能回本。2023 年算出的缺口是 2,000 億美元，2024 年再算一次，擴大到 6,000 億。</p>
+      </div>
+      <div>
+        <p class="body" data-editable>缺口變大的原因很簡單：<b>支出成長的速度比營收快</b>。</p>
+        <p class="body" data-editable style="margin-top:24px">OpenAI 是營收成長最快的 AI 公司之一，但它的年營收和它的算力承諾相比，仍然差了好幾個數量級。</p>
+        <!-- gap bars: 2023 vs 2024 estimate, same scale -->
+        <svg viewBox="0 0 700 300" style="width:100%;margin-top:30px">
+          <path class="ln thin" d="M0 270H700"/>
+          <rect x="120" y="200" width="160" height="70" class="fa" opacity=".6"/>
+          <rect x="420" y="60" width="160" height="210" class="fa"/>
+          <g class="fi" font-size="24" text-anchor="middle"><text x="200" y="298">2023 估算</text><text x="500" y="298">2024 估算</text></g>
+          <g class="fi" font-family="Playfair Display" font-style="italic" font-weight="900" font-size="36" text-anchor="middle"><text x="200" y="186">2,000 億</text><text x="500" y="46">6,000 億</text></g>
+        </svg>
+      </div>
+    </div>
+  </div>
+  <div class="folio"><span>資料：Sequoia Capital, “AI’s $200B Question” (2023)、“AI’s $600B Question” (2024)</span><span>10</span></div>
+</section>
+
+<!-- === 11. ENTERPRISE ADOPTION === -->
+<section class="slide">
+  <div class="head"><span>市場版</span><span>企業導入</span><span>11</span></div>
+  <div class="pad">
+    <p class="kicker reveal">MIT 研究</p>
+    <h2 class="title reveal">很多企業在用，很少企業賺到</h2>
+    <div class="grid2 reveal" style="grid-template-columns:auto 1fr;gap:80px;align-items:center;margin-top:20px">
+      <div style="text-align:center">
+        <!-- waffle: 100 squares = 100 pilots; 5 filled = measurable P&L impact -->
+        <svg viewBox="0 0 540 540" style="width:400px" id="waffle"></svg>
+        <div class="num" style="font-size:96px;margin-top:6px">95%</div>
+        <p class="small" style="margin:24px 0 0">空心＝看不到損益影響　實心＝有</p>
+      </div>
+      <div>
+        <p class="body" data-editable style="font-size:36px;font-weight:700">的企業生成式 AI 試點專案，看不到可衡量的損益影響。</p>
+        <p class="body" data-editable style="margin-top:28px">報告認為問題不在模型品質，而在<b>工具沒有真正接進工作流程</b>：員工私下用 ChatGPT 很順手，公司導入的系統卻常常停在試點。</p>
+        <p class="body" data-editable style="margin-top:28px">向外部廠商採購的方案，成功率明顯高於企業自己開發。</p>
+      </div>
+    </div>
+  </div>
+  <div class="folio"><span>資料：MIT NANDA, “The GenAI Divide: State of AI in Business 2025”</span><span>11</span></div>
+</section>
+
+<!-- === 12. CIRCULAR DEALS === -->
+<section class="slide">
+  <div class="head"><span>分析版</span><span>循環交易</span><span>12</span></div>
+  <div class="pad">
+    <p class="kicker reveal">錢在同一個圈子裡轉</p>
+    <h2 class="title reveal">供應商投資客戶，客戶再回頭買供應商</h2>
+    <div class="grid2 reveal" style="grid-template-columns:1.1fr 1fr;align-items:center;margin-top:10px">
+      <svg viewBox="0 0 860 560" style="width:100%" font-family="Noto Serif TC" font-size="30" font-weight="700">
+        <defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#b4341f"/></marker></defs>
+        <g fill="none" stroke="#b4341f" stroke-width="4" marker-end="url(#ar)">
+          <path d="M330 110 Q430 60 520 110"/>
+          <path d="M520 150 Q430 200 340 150" stroke-dasharray="8 8"/>
+          <path d="M545 172 L322 396"/>
+          <path d="M200 400 L200 176"/>
+          <path d="M650 398 L650 176" marker-start="url(#ar)"/>
+        </g>
+        <g fill="#f4eee2" stroke="#1d1a16" stroke-width="3">
+          <rect x="110" y="80" width="220" height="90"/><rect x="520" y="80" width="220" height="90"/>
+          <rect x="520" y="400" width="220" height="90"/><rect x="110" y="400" width="220" height="90"/>
+        </g>
+        <g fill="#1d1a16" text-anchor="middle">
+          <text x="220" y="136">輝達</text><text x="630" y="136">OpenAI</text>
+          <text x="630" y="456">AMD</text><text x="220" y="456">甲骨文</text>
+        </g>
+        <g fill="#6f6455" font-size="22" font-weight="400" text-anchor="middle">
+          <text x="425" y="52">投資最多 1,000 億</text>
+          <text x="425" y="222">買 GPU</text>
+          <text x="345" y="310">雲端合約</text>
+          <text x="105" y="295">採購晶片</text>
+          <text x="760" y="295">晶片合約</text>
+          <text x="760" y="325">＋認股權</text>
+        </g>
+      </svg>
+      <div>
+        <p class="body" data-editable><b>輝達</b>宣布投資 OpenAI 最多 1,000 億美元，OpenAI 再用來買輝達的晶片。</p>
+        <p class="body" data-editable style="margin-top:20px"><b>甲骨文</b>和 OpenAI 簽下數千億美元的雲端合約，再向輝達採購晶片。</p>
+        <p class="body" data-editable style="margin-top:20px"><b>AMD</b>和 OpenAI 簽晶片合約，同時給 OpenAI 認股權。</p>
+        <p class="small" data-editable style="margin-top:24px">風險在於：營收看起來在成長，但一部分其實是同一筆錢繞了一圈。</p>
+      </div>
+    </div>
+  </div>
+  <div class="folio"><span>資料：2025 年 9–10 月各公司公告</span><span>12</span></div>
+</section>
+
+<!-- === 13. DEBT === -->
+<section class="slide">
+  <div class="head"><span>分析版</span><span>資金來源</span><span>13</span></div>
+  <div class="pad">
+    <p class="kicker reveal">從現金到借款</p>
+    <h2 class="title reveal">自有現金不夠用，開始舉債</h2>
+    <p class="lede reveal" data-editable>早期的 AI 投資主要靠科技巨頭自己的現金流。2025 年下半年起，越來越多資料中心改用債券、私募信貸和特殊目的公司融資。</p>
+    <div class="grid3 reveal">
+      <div class="card"><h3>Meta × Blue Owl</h3><p data-editable>路易斯安那州 Hyperion 資料中心，透過合資公司籌措約 270 億美元，債務不直接列在 Meta 帳上。</p></div>
+      <div class="card"><h3>甲骨文</h3><p data-editable>2025 年 9 月發行約 180 億美元公司債，支應雲端與資料中心擴張。</p></div>
+      <div class="card"><h3>新雲端業者</h3><p data-editable>CoreWeave 等專做 AI 算力的公司，高度依賴借款買 GPU，再把 GPU 當擔保品。</p></div>
+    </div>
+    <!-- off-balance-sheet structure, simplified: lenders → joint venture → data center ← tech company leases -->
+    <svg class="reveal" viewBox="0 0 1700 260" style="width:100%;margin-top:auto" font-size="28" font-weight="700">
+      <defs><marker id="ar2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#b4341f"/></marker></defs>
+      <g class="ln"><rect x="0" y="80" width="300" height="100"/><rect x="460" y="80" width="340" height="100" style="stroke:var(--accent);stroke-width:4"/><rect x="960" y="80" width="300" height="100"/><rect x="1400" y="80" width="300" height="100"/></g>
+      <g class="ln ac" marker-end="url(#ar2)"><path d="M300 130H452"/><path d="M800 130H952"/><path d="M1400 130H1268" class="dash"/></g>
+      <g class="fi" text-anchor="middle"><text x="150" y="140">債券投資人</text><text x="630" y="140">合資公司</text><text x="1110" y="140">資料中心</text><text x="1550" y="140">科技巨頭</text></g>
+      <g class="fm" font-size="22" font-weight="400" text-anchor="middle"><text x="376" y="110">借款</text><text x="876" y="110">興建</text><text x="1334" y="110">長期租用</text><text x="630" y="225">債務記在這裡，不在巨頭帳上</text></g>
+    </svg>
+  </div>
+  <div class="folio"><span>資料：2025 年市場與財經媒體報導</span><span>13</span></div>
+</section>
+
+<!-- === 14. VOICES === -->
+<section class="slide dark">
+  <div class="head"><span>人物版</span><span>當事人怎麼說</span><span>14</span></div>
+  <div class="pad">
+    <p class="kicker reveal">連業界領袖都在談泡沫</p>
+    <h2 class="title reveal">三位執行長，三種說法</h2>
+    <div class="grid3 reveal" style="margin-top:30px">
+      <div class="quote"><svg viewBox="0 0 120 120" style="width:110px;margin-bottom:20px"><circle cx="60" cy="60" r="56" class="ln ac"/><circle cx="60" cy="60" r="46" class="ln thin"/><text x="60" y="76" text-anchor="middle" font-family="Playfair Display" font-style="italic" font-weight="900" font-size="44" class="fa">SA</text></svg><p data-editable>投資人整體來說，是不是對 AI 過度興奮？我的看法是：是的。</p><cite>Sam Altman，OpenAI 執行長，2025 年 8 月</cite></div>
+      <div class="quote"><svg viewBox="0 0 120 120" style="width:110px;margin-bottom:20px"><circle cx="60" cy="60" r="56" class="ln ac"/><circle cx="60" cy="60" r="46" class="ln thin"/><text x="60" y="76" text-anchor="middle" font-family="Playfair Display" font-style="italic" font-weight="900" font-size="44" class="fa">JB</text></svg><p data-editable>這是一種「產業泡沫」。泡沫破了以後，留下來的發明會讓社會受益。</p><cite>Jeff Bezos，Amazon 創辦人，2025 年 10 月</cite></div>
+      <div class="quote"><svg viewBox="0 0 120 120" style="width:110px;margin-bottom:20px"><circle cx="60" cy="60" r="56" class="ln ac"/><circle cx="60" cy="60" r="46" class="ln thin"/><text x="60" y="76" text-anchor="middle" font-family="Playfair Display" font-style="italic" font-weight="900" font-size="44" class="fa">SP</text></svg><p data-editable>這波 AI 投資裡有一些不理性的成分，沒有公司能完全不受影響。</p><cite>Sundar Pichai，Google 執行長，2025 年 11 月</cite></div>
+    </div>
+    <p class="small reveal" style="margin-top:auto">以上為中文意譯，引用時請對照原始訪談。</p>
+  </div>
+  <div class="folio"><span>資料：各次公開訪談</span><span>14</span></div>
+</section>
+
+<!-- === 15. 1999 VS NOW === -->
+<section class="slide">
+  <div class="head"><span>評論版</span><span>歷史對照</span><span>15</span></div>
+  <div class="pad">
+    <p class="kicker reveal">這次和 1999 年比</p>
+    <h2 class="title reveal">有些地方不一樣，有些地方很像</h2>
+    <table class="reveal" style="margin-top:20px">
+      <tr><th>面向</th><th>1999 網路泡沫</th><th>現在的 AI 熱潮</th></tr>
+      <tr><td>誰在投資</td><td data-editable>大量沒有獲利的新創，靠上市募資</td><td data-editable>獲利豐厚的科技巨頭為主，<b>加上越來越多借款</b></td></tr>
+      <tr><td>需求</td><td data-editable>上網人口還在起步，需求多是預期</td><td data-editable>使用者已經很多，但付費與企業獲利還在追</td></tr>
+      <tr><td>基礎建設</td><td data-editable>過度鋪設光纖，多年後才用完</td><td data-editable>大量興建資料中心，GPU 幾年就會過時</td></tr>
+      <tr><td>集中度</td><td data-editable>分散在數百家網路公司</td><td data-editable>集中在少數幾家巨頭，牽動整體大盤</td></tr>
+    </table>
+    <!-- infrastructure then vs now: fiber spool vs GPU server rack -->
+    <svg class="reveal" viewBox="0 0 1700 230" style="width:100%;margin-top:auto">
+      <g class="ln"><circle cx="420" cy="110" r="90"/><circle cx="420" cy="110" r="60"/><circle cx="420" cy="110" r="22" class="ac"/><path d="M510 110 C600 110 620 180 720 180 S820 120 880 120" class="ac"/></g>
+      <text x="420" y="228" text-anchor="middle" font-size="26" font-weight="700" class="fi">1999：鋪不完的光纖</text>
+      <g class="ln"><rect x="1150" y="10" width="220" height="190"/><path d="M1150 56h220M1150 102h220M1150 148h220"/></g>
+      <g class="fa"><circle cx="1180" cy="33" r="6"/><circle cx="1180" cy="79" r="6"/><circle cx="1180" cy="125" r="6"/><circle cx="1180" cy="171" r="6"/></g>
+      <g class="ln thin"><path d="M1210 33h130M1210 79h130M1210 125h130M1210 171h130"/></g>
+      <text x="1260" y="228" text-anchor="middle" font-size="26" font-weight="700" class="fi">現在：幾年就換代的 GPU</text>
+    </svg>
+  </div>
+  <div class="folio"><span>AI 泡沫化？</span><span>15</span></div>
+</section>
+
+<!-- === 16. THE BULL CASE === -->
+<section class="slide">
+  <div class="head"><span>評論版</span><span>反方論點</span><span>16</span></div>
+  <div class="pad">
+    <p class="kicker reveal">為什麼有人說「不是泡沫」</p>
+    <h2 class="title reveal">需求是真的，付錢的人也有錢</h2>
+    <div class="grid2 reveal" style="margin-top:20px;align-items:stretch">
+      <div class="card">
+        <h3>ChatGPT 每週使用者（億）</h3>
+        <!-- weekly active users as announced by OpenAI -->
+        <svg viewBox="0 0 760 330" style="width:100%">
+          <path class="ln thin" d="M0 290H760"/>
+          <g class="fa"><rect x="40" y="255" width="120" height="35" opacity=".45"/><rect x="220" y="150" width="120" height="140" opacity=".65"/><rect x="400" y="45" width="120" height="245" opacity=".85"/><rect x="580" y="10" width="120" height="280"/></g>
+          <g class="fi" font-family="Playfair Display" font-style="italic" font-weight="900" font-size="34" text-anchor="middle"><text x="100" y="245">1</text><text x="280" y="140">4</text><text x="460" y="35">7</text><text x="640" y="0" dy="0"></text></g>
+          <text x="640" y="160" text-anchor="middle" font-family="Playfair Display" font-style="italic" font-weight="900" font-size="44" fill="var(--paper)">8</text>
+          <g class="fm" font-size="22" text-anchor="middle"><text x="100" y="322">2023.11</text><text x="280" y="322">2025.2</text><text x="460" y="322">2025.8</text><text x="640" y="322">2025.10</text></g>
+        </svg>
+      </div>
+      <div class="card"><div class="num">供不應求</div><h3>算力還不夠用</h3><p data-editable>雲端業者多次表示 AI 算力需求超過供給，新蓋的資料中心一上線就被租走。</p><p data-editable style="margin-top:20px">1999 年的網路公司沒有這種規模的實際使用。</p></div>
+    </div>
+    <p class="lede reveal" data-editable style="margin-top:30px">支持者認為：就算估值偏高，也比較像「漲太快」，不是「沒有東西」。</p>
+  </div>
+  <div class="folio"><span>資料：OpenAI DevDay 2025、各雲端業者財報說明</span><span>16</span></div>
+</section>
+
+<!-- === 17. RISKS === -->
+<section class="slide dark">
+  <div class="head"><span>觀察版</span><span>主要風險</span><span>17</span></div>
+  <div class="pad">
+    <p class="kicker reveal">可能戳破泡沫的四根針</p>
+    <h2 class="title reveal">哪裡最可能出問題</h2>
+    <div class="grid4 reveal" style="margin-top:30px">
+      <div class="card"><svg class="icon"><use href="#i-bolt"/></svg><h3>電力</h3><p data-editable>資料中心用電暴增，電網與發電廠的建設速度跟不上，有錢也蓋不起來。</p></div>
+      <div class="card"><svg class="icon"><use href="#i-chip"/></svg><h3>折舊</h3><p data-editable>GPU 幾年就被新一代取代。如果折舊年限估得太長，帳面獲利會被高估。</p></div>
+      <div class="card"><svg class="icon"><use href="#i-tag"/></svg><h3>價格戰</h3><p data-editable>DeepSeek 證明便宜的模型也能很強，AI 服務的單價可能一路往下掉。</p></div>
+      <div class="card"><svg class="icon"><use href="#i-pie"/></svg><h3>集中度</h3><p data-editable>少數公司佔大盤權重太高，一家財報不如預期就可能拖累整個市場。</p></div>
+    </div>
+    <!-- one bubble, four needles -->
+    <svg class="reveal" viewBox="0 0 1700 300" style="width:100%;margin-top:auto;color:var(--paper)">
+      <use href="#bubble" x="710" y="10" width="280" height="280" class="float"/>
+      <g class="ln ac" style="stroke-width:4"><path d="M380 60 L700 120"/><path d="M380 240 L700 190"/><path d="M1320 60 L1000 120"/><path d="M1320 240 L1000 190"/></g>
+      <g class="fa"><circle cx="380" cy="60" r="10"/><circle cx="380" cy="240" r="10"/><circle cx="1320" cy="60" r="10"/><circle cx="1320" cy="240" r="10"/></g>
+      <g class="fi" font-size="28" font-weight="700"><text x="250" y="70">電力</text><text x="250" y="250">折舊</text><text x="1345" y="70">價格戰</text><text x="1345" y="250">集中度</text></g>
+    </svg>
+  </div>
+  <div class="folio"><span>AI 泡沫化？</span><span>17</span></div>
+</section>
+
+<!-- === 18. SCENARIOS === -->
+<section class="slide">
+  <div class="head"><span>觀察版</span><span>三種情境</span><span>18</span></div>
+  <div class="pad">
+    <p class="kicker reveal">接下來可能怎麼走</p>
+    <h2 class="title reveal">不是只有「破」或「不破」</h2>
+    <table class="reveal" style="margin-top:20px">
+      <tr><th>情境</th><th>會發生什麼</th><th>前提</th></tr>
+      <tr><td>軟著陸</td><td data-editable>營收慢慢追上支出，估值不跌但停止上漲，用時間消化</td><td data-editable>企業導入開始真的賺錢</td></tr>
+      <tr><td>修正</td><td data-editable>股價回檔兩到四成，較弱的新創被併購或倒閉，巨頭繼續投資</td><td data-editable>支出放緩、某季財報不如預期</td></tr>
+      <tr><td>破裂</td><td data-editable>類似 2000 年，資本支出急凍，債務違約連鎖發生</td><td data-editable>舉債過度，加上需求明顯不如預期</td></tr>
+    </table>
+    <!-- scenario sparklines, same order as the table -->
+    <svg class="reveal" viewBox="0 0 1700 200" style="width:100%;margin-top:30px">
+      <g class="ln thin"><path d="M0 170H500"/><path d="M600 170H1100"/><path d="M1200 170H1700"/></g>
+      <path class="ln draw" style="stroke-width:5" d="M0 150 C120 120 200 50 260 45 S420 40 500 38"/>
+      <path class="ln draw" style="stroke-width:5" d="M600 150 C720 120 800 30 860 30 C900 30 920 100 960 105 S1060 70 1100 60"/>
+      <path class="ln draw ac" style="stroke-width:5" d="M1200 150 C1320 120 1400 20 1460 20 C1500 20 1520 140 1560 160 S1660 165 1700 160"/>
+      <g class="fi" font-size="28" font-weight="700" text-anchor="middle"><text x="250" y="200">軟著陸</text><text x="850" y="200">修正</text><text x="1450" y="200">破裂</text></g>
+    </svg>
+    <p class="small reveal" data-editable style="margin-top:20px">這三種情境是整理常見分析觀點，不是預測，也沒有附上機率。</p>
+  </div>
+  <div class="folio"><span>AI 泡沫化？</span><span>18</span></div>
+</section>
+
+<!-- === 19. WHAT TO WATCH === -->
+<section class="slide">
+  <div class="head"><span>觀察版</span><span>觀察指標</span><span>19</span></div>
+  <div class="pad">
+    <p class="kicker reveal">每季財報可以看的五件事</p>
+    <h2 class="title reveal">與其猜泡沫，不如盯數字</h2>
+    <div class="reveal" style="display:grid;grid-template-columns:1fr 440px;gap:60px;align-items:center;margin-top:20px">
+    <ul class="checks">
+      <li data-editable>雲端巨頭的資本支出指引：還在上調，還是開始下修？</li>
+      <li data-editable>AI 相關營收：有沒有單獨揭露，成長速度追不追得上支出？</li>
+      <li data-editable>企業客戶：是從試點走向全面導入，還是續約率下滑？</li>
+      <li data-editable>資金來源：新的資料中心靠現金，還是靠借款和表外融資？</li>
+      <li data-editable>算力價格：GPU 租用價格是否持續下跌，代表供給開始過剩？</li>
+    </ul>
+    <!-- magnifier over an earnings chart -->
+    <svg viewBox="0 0 440 440" style="width:100%">
+      <g class="ln thin"><path d="M20 400H420M20 400V40"/></g>
+      <g class="fa" opacity=".35"><rect x="50" y="300" width="50" height="100"/><rect x="130" y="250" width="50" height="150"/><rect x="210" y="190" width="50" height="210"/><rect x="290" y="120" width="50" height="280"/></g>
+      <circle cx="250" cy="200" r="110" class="ln" style="stroke-width:10"/>
+      <path d="M330 280 L420 370" class="ln" style="stroke-width:22"/>
+      <path class="ln ac" style="stroke-width:5" d="M170 230 L220 200 L260 215 L320 150"/>
+    </svg>
+    </div>
+  </div>
+  <div class="folio"><span>AI 泡沫化？</span><span>19</span></div>
+</section>
+
+<!-- === 20. CLOSING === -->
+<section class="slide dark">
+  <div class="head"><span>結語</span><span>AI 產業觀察</span><span>20</span></div>
+  <svg style="position:absolute;right:110px;top:160px;width:520px;height:420px;color:var(--paper)" viewBox="0 0 520 420">
+    <use href="#bubble" x="250" y="40" width="240" height="240" class="float" style="opacity:.8"/>
+    <use href="#pop" x="20" y="150" width="220" height="220" style="color:var(--accent)"/>
+  </svg>
+  <div class="pad" style="justify-content:center">
+    <p class="reveal" data-editable style="font-size:40px;color:var(--mute);margin:0">網路泡沫留下了光纖和 Amazon，也留下了 Pets.com。</p>
+    <h2 class="reveal" data-editable style="font-size:110px;font-weight:900;line-height:1.25;margin:40px 0 0">誰是下一個 <span class="num" style="font-size:140px">Amazon</span>，<br>誰是下一個 <span class="num" style="font-size:140px;color:var(--mute)">Pets.com</span>？</h2>
+  </div>
+  <div class="folio"><span>謝謝閱讀</span><span>20</span></div>
+</section>
+
+<!-- === 21. SOURCES === -->
+<section class="slide">
+  <div class="head"><span>附錄</span><span>資料來源</span><span>21</span></div>
+  <!-- stacked newspapers with the bubble motif -->
+  <svg style="position:absolute;right:130px;bottom:150px;width:420px;height:330px;color:var(--ink)" viewBox="0 0 420 330">
+    <g class="ln"><path d="M40 300 L360 300 L380 280 L60 280Z"/><rect x="60" y="80" width="300" height="200" transform="rotate(-4 210 180)" style="fill:var(--card)"/><rect x="80" y="70" width="300" height="200" style="fill:var(--card)"/></g>
+    <g class="ln thin"><path d="M100 140h120M100 165h120M100 190h120M100 215h120M100 240h120M240 140h120M240 165h120M240 190h120M240 215h120M240 240h120"/></g>
+    <path class="ln" d="M100 112h260" style="stroke-width:6"/>
+    <use href="#bubble" x="300" y="0" width="110" height="110" class="float" style="color:var(--accent)"/>
+  </svg>
+  <div class="pad">
+    <p class="kicker reveal">資料來源</p>
+    <div class="grid2 reveal" style="margin-top:20px">
+      <ul data-editable style="font-size:25px;line-height:1.85;margin:0;padding-left:1.2em">
+        <li>Kindleberger & Aliber, <i>Manias, Panics, and Crashes</i></li>
+        <li>Nasdaq Composite 指數歷史資料（1995–2015）</li>
+        <li>輝達市值：2023–2025 年市場報導</li>
+        <li>雲端巨頭資本支出：各公司 2025 年財報與指引</li>
+        <li>星際之門：OpenAI、軟銀、甲骨文 2025 年 1 月公告</li>
+        <li>Sequoia Capital, “AI’s $200B Question” (2023)</li>
+        <li>Sequoia Capital, “AI’s $600B Question” (2024)</li>
+      </ul>
+      <ul data-editable style="font-size:25px;line-height:1.85;margin:0;padding-left:1.2em">
+        <li>MIT NANDA, “The GenAI Divide” (2025)</li>
+        <li>輝達、AMD、甲骨文與 OpenAI 合作公告（2025 年 9–10 月）</li>
+        <li>Meta–Blue Owl、甲骨文發債：2025 年財經媒體報導</li>
+        <li>Altman（2025.8）、Bezos（2025.10）、Pichai（2025.11）訪談</li>
+        <li>OpenAI DevDay 2025 使用者數據</li>
+      </ul>
+    </div>
+    <p class="small reveal" style="margin-top:auto">數據整理至 2026 年中。金額多為公開報導的約略值，引用前請再核對最新資料。</p>
+  </div>
+  <div class="folio"><span>AI 泡沫化？</span><span>21</span></div>
+</section>
+
+</div></div>
+<div class="progress" id="bar"></div>
+<div class="edit-hot"></div><button class="edit-btn" id="editBtn">編輯 (E)</button>
+
+<script>
+/* === SCALE STAGE TO VIEWPORT === */
+const stage=document.getElementById('stage');
+const fit=()=>stage.style.setProperty('--s',Math.min(innerWidth/1920,innerHeight/1080));
+addEventListener('resize',fit);fit();
+
+/* === NAVIGATION: keys, click, swipe, #hash === */
+const slides=[...document.querySelectorAll('.slide')];
+let cur=Math.min(Math.max(parseInt(location.hash.slice(1))-1||0,0),slides.length-1);
+function go(i){
+  cur=Math.max(0,Math.min(slides.length-1,i));
+  slides.forEach((s,j)=>s.classList.toggle('active',j===cur));
+  document.getElementById('bar').style.width=((cur+1)/slides.length*100)+'%';
+  history.replaceState(null,'','#'+(cur+1));
+}
+addEventListener('keydown',e=>{
+  if(document.body.classList.contains('editing')){
+    if(e.key==='Escape')toggleEdit();
+    if((e.ctrlKey||e.metaKey)&&e.key==='s'){e.preventDefault();save()}
+    return;
+  }
+  if(['ArrowRight','ArrowDown','PageDown',' '].includes(e.key)){e.preventDefault();go(cur+1)}
+  else if(['ArrowLeft','ArrowUp','PageUp'].includes(e.key)){e.preventDefault();go(cur-1)}
+  else if(e.key==='Home')go(0);else if(e.key==='End')go(slides.length-1);
+  else if(e.key==='e'||e.key==='E')toggleEdit();
+});
+addEventListener('click',e=>{
+  if(document.body.classList.contains('editing')||e.target.closest('button'))return;
+  go(e.clientX>innerWidth/2?cur+1:cur-1);
+});
+let tx=null;
+addEventListener('touchstart',e=>tx=e.touches[0].clientX,{passive:true});
+addEventListener('touchend',e=>{if(tx===null)return;const d=e.changedTouches[0].clientX-tx;if(Math.abs(d)>50)go(d<0?cur+1:cur-1);tx=null});
+
+/* === INLINE EDITING: E to toggle, Ctrl/Cmd+S downloads the edited file === */
+const editables=document.querySelectorAll('[data-editable]');
+function toggleEdit(){
+  const on=document.body.classList.toggle('editing');
+  editables.forEach(el=>el.contentEditable=on);
+}
+function save(){
+  toggleEdit();
+  const html='<!doctype html>\n'+document.documentElement.outerHTML;
+  toggleEdit();
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([html],{type:'text/html'}));
+  a.download=location.pathname.split('/').pop()||'slides.html';a.click();
+}
+document.getElementById('editBtn').addEventListener('click',toggleEdit);
+
+/* === GENERATED GRAPHICS: neural net (slide 7) + waffle (slide 11) === */
+const NS='http://www.w3.org/2000/svg';
+const el=(p,tag,a)=>{const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);p.appendChild(e);return e};
+(()=>{const svg=document.getElementById('nn'),xs=[100,400,700,1000,1300,1600],ns=[3,5,6,6,5,2];
+  const pts=ns.map((n,i)=>Array.from({length:n},(_,j)=>[xs[i],170+(j-(n-1)/2)*56]));
+  const hot=[1,2,3,2,1,0];// highlighted path: one node per layer
+  pts.slice(1).forEach((layer,i)=>layer.forEach(b=>pts[i].forEach(a=>el(svg,'line',{x1:a[0],y1:a[1],x2:b[0],y2:b[1],class:'ln thin'}))));
+  hot.slice(1).forEach((j,i)=>{const a=pts[i][hot[i]],b=pts[i+1][j];el(svg,'line',{x1:a[0],y1:a[1],x2:b[0],y2:b[1],class:'ln ac',style:'stroke-width:4'})});
+  pts.forEach((layer,i)=>layer.forEach((p,j)=>el(svg,'circle',{cx:p[0],cy:p[1],r:14,class:'ln'+(hot[i]===j?' ac':''),style:'fill:var(--ink)'})));
+})();
+(()=>{const svg=document.getElementById('waffle');
+  for(let i=0;i<100;i++){const x=(i%10)*54+5,y=Math.floor(i/10)*54+5;
+    el(svg,'rect',i<5?{x,y,width:44,height:44,class:'fa'}:{x,y,width:44,height:44,class:'ln',style:'stroke-width:2;opacity:.5'})}
+})();
+
+go(cur);
+</script>
+</body>
+</html>
